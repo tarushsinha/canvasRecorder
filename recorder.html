@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+		<head>
+				<!-- include charset="utf-8" for bootstrap -->
+				<meta charset="utf-8" />
+				<!-- Webpage Description -->
+				<meta name="description" content="This is my fourth project for CMSC389J for Winter 2018" />
+				<!-- Webpage SEO tags -->
+				<meta name="keywords" content="Tarush Sinha, CMSC389J, UMD, HTML, CSS, JS, PHP, Project 4" />
+				<!-- Webpage Title -->
+		 		<title>Recorder</title>
+		</head>
+
+		<body>
+				<canvas id="canvas" width="600" height="400" style="border:1px solid #000000;"></canvas>
+				<script>
+						"use strict"
+
+						let color = "green";
+						let sideLength = 5;
+
+						let recorderLL;
+						let recorderHead;
+						let animationInterval;
+
+						//boolean flag to enable or disable drawing
+						let flag = false;
+
+						main();
+
+						// LinkedList Implementation (constructor + methods for the LL)
+						function LinkedList(comparisonfx) {
+								this.comparisonfx = comparisonfx;
+								this.head = null;
+								this.size = 0;
+						}
+
+						function Node(data) {
+								this.data = data;
+								this.next = null;
+						}
+
+						LinkedList.prototype = {
+								constructor: LinkedList,
+
+								//LL size
+								size: function() {
+										return this.size;
+								},
+
+								//Add element to front of LL
+								push: function(data) {
+										let temp = new Node(data);
+
+										//empty LL case
+										if (this.head === null) {
+												this.head = temp;
+												this.size += 1;
+										}
+										//add element to front of existing list
+										else { 
+												temp.next = this.head;
+												this.head = temp;
+										}
+								},
+
+								//Add element to end of LL
+								pull: function(data) {
+										let temp = new Node(data);
+
+										//empty LL case
+										if (this.head === null) {
+												this.head = temp;
+												this.size += 1;
+										}
+										//add element to end of existing list
+										else {
+												let itr = this.head;
+												//iterate to last element in LL
+												while (itr.next !== null) {
+													itr = itr.next;
+												}
+												itr.next = temp;
+												this.size += 1;
+										}
+								},
+
+								//Find specific element in LL
+								search: function(data) {
+										let temp = this.head;
+										//empty LL case
+										if (temp === null) {
+												return false;
+										}
+										//iterate through LL, find element, compare and return
+										else {
+												while (temp !== null) {
+														if (this.comparisonfx(data, temp.data) === 0) {
+																return true;
+														}
+														temp = temp.next;
+												}
+												return false;
+										}
+								}
+						};
+
+						function main() {
+								//Recorder Instructions
+								document.writeln("<h4>How to use this Recorder:</h4>");
+								document.writeln("<p>Hi there, welcome to this Recorder for CMSC389J! Upon clicking record, you will be able to draw and record your mouse movements on the canvas above.<br>");
+								document.writeln("One of the features available to you while drawing are to change colors: click the appropriate button for your color of choice, then press the <strong>Change Color</strong> button.<br>");
+								document.writeln("The default color is green, and the options are the Primary and Secondary Colors<br>");
+								document.writeln("In addition to colors, you may also start, stop, and save recordings. Further, you may retreive a previous recording, and obviously clear the screen. <br></p>");
+
+								//Record, Stop Recording, Play, Save Recording, Clear, and Retreive buttons
+								document.writeln("<input type=\"button\" value=\"Start Recording\" id=\"start\" />");
+								document.writeln("<input type=\"button\" value=\"Stop Recording\" id=\"stop\" />");
+								document.writeln("<input type=\"button\" value=\"Play\" id=\"play\" />");
+								document.writeln("<input type=\"button\" value=\"Save Recording\" id=\"save\" />");
+								document.writeln("<input type=\"button\" value=\"Retrieve Saved Recording\" id=\"retrieve\" />");
+								document.writeln("<input type=\"button\" value=\"Clear Screen\" id=\"clear\" /><br><br>");
+								
+
+								//Radio Buttons to process single color choice
+								document.writeln("Select Color: ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"blue\" id=\"blue\" />Blue ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"yellow\" id=\"yellow\" />Yellow ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"red\" id=\"red\" />Red ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"green\" id=\"green\" />Green ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"orange\" id=\"orange\" />Orange ");
+								document.writeln("<input type=\"radio\" name=\"RGB\" value=\"purple\" id=\"purple\" />Purple ");
+								document.writeln("<input type=\"button\" id=\"changeColor\" value=\"Change Color\" />");
+								document.writeln("<br><br>");
+
+								//Button Event Listeners
+								document.getElementById("start").onclick = startRecording;
+								document.getElementById("stop").onclick = stopRecording;
+								document.getElementById("play").onclick = playRecording;
+								document.getElementById("save").onclick = saveRecording;
+								document.getElementById("retrieve").onclick = retrieveSavedRecording;
+								document.getElementById("clear").onclick = clearScreen;
+								document.getElementById("changeColor").onclick = changeColor;
+						}
+
+						function startRecording() {
+								let comparisonfx = 
+										function(x, y) {
+									 			if (x > y) {
+									 					return 1;
+									 			}
+									 			else if (x < y) {
+									 					return -1;
+									 			}
+									 			else {
+									 					return 0;
+									 			}
+										};
+								recorderLL = new LinkedList(comparisonfx);
+								
+								//set flag to true to start drawing
+								flag = true;
+								document.onmousemove = processMousePosition;
+						}
+
+						function stopRecording() {
+								//set flag to false to stop drawing
+								flag = false;
+								document.onmousemove = processMousePosition;
+						}
+
+						function playRecording() {
+								//clear the screen before playing the animation
+								clearScreen();
+								recorderHead = recorderLL.head;
+								animationInterval = setInterval("playAnimation(recorderHead)", 50);
+						}
+
+						//helper method to play the recording
+						function playAnimation(node) {
+	    					let ctx = document.getElementById("canvas").getContext("2d");
+	    					if (node !== null) {
+	    							let XYpos = node.data;
+	    							ctx.fillStyle = color;
+	    							ctx.fillRect(XYpos[0], XYpos[1], sideLength, sideLength);
+	    							recorderHead = node.next;
+	    					}
+	    					else {
+	    							window.clearInterval(animationInterval);
+	    					}
+    				}
+
+						function saveRecording() {
+								//convert LL to JSON and then store in local storage
+								window.localStorage.setItem("recorded", JSON.stringify(recorderLL));
+						}
+
+						function retrieveSavedRecording() {
+								//convert JSON string back to LL and restore from local storage
+								recorderLL = JSON.parse(localStorage.getItem("recorded"));
+
+						}
+
+						function clearScreen() {
+								//define canvas drawing context variable, fill with white per canvas parameters
+								let ctx = document.getElementById("canvas").getContext("2d");
+								ctx.fillStyle = "#ffffff";
+								ctx.fillRect(0, 0, 600, 400);
+						}
+
+						function changeColor() {
+								//pull radio buttons from document and define index to iterate
+								let RGB = document.getElementsByName("RGB");
+								let idx;
+								
+								//find checked radio button, then set color variable to selected color
+								for (idx = 0; idx < RGB.length; idx++) {
+										if (RGB[idx].checked) {
+											color = RGB[idx].value;
+										}
+								}
+						}
+
+						function processMousePosition(pageEvent) {
+                if (flag === true) {
+                		draw(pageEvent.pageX, pageEvent.pageY);
+                }
+            }
+
+            function draw(X, Y) {
+			    			//similar to clearScreen, define canvas drawing and fill with color of designated sidelength
+			    			let ctx = document.getElementById("canvas").getContext("2d");
+							
+			    			ctx.fillStyle = color;
+			    			ctx.fillRect(X, Y, sideLength, sideLength);
+			    			recorderLL.pull([X, Y]);
+    				}	
+				</script>
+		</body>
+</html>
